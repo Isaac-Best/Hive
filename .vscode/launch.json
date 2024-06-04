@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Run app_main.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "Hive.v01/app_main.py",
+            "args": ["-ip", "127.0.0.1", "-port", "54321", "-friendly_name", "LosAngeles"],
+            "console": "integratedTerminal",
+            "justMyCode": false
+        }
+    ]
+}
