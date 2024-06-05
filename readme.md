@@ -15,7 +15,7 @@ Step 3. In any terminal run the command (give a few seconds for everything to co
     propogate_config 
 
     this will load the hardcoded network configuration file from initial_configuration.json assign it to a config_network_manager
-    data member and then propogate it to the currently connected live nodes. 
+    data member and then propagate it to the currently connected live nodes. 
 
 Step 4 In any terminal you wish to run service checks type 
     run_service_checks
