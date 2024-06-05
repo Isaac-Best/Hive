@@ -9,7 +9,7 @@ from message_queue import MessageQueue
 from ack_message import AckMessage
 from connect_message import ConnectMessage
 from heartbeat_message import HeartbeatMessage
-
+from config_network_manager import ConfigNetworkManager
 
 class HiveReceiverService:
     """
@@ -34,7 +34,7 @@ class HiveReceiverService:
         A queue for storing outgoing messages.
     """
 
-    def __init__(self, name: str, ip_address: str, port: int, hive_node_manager, inbound_message_queue: MessageQueue, outbound_message_queue: MessageQueue):
+    def __init__(self, name: str, ip_address: str, port: int, hive_node_manager, inbound_message_queue: MessageQueue, outbound_message_queue: MessageQueue, config_network_manager: ConfigNetworkManager):
         """
         Initializes a new instance of HiveReceiverService.
 
@@ -60,6 +60,8 @@ class HiveReceiverService:
         self.hive_node_manager = hive_node_manager
         self.inbound_message_queue: MessageQueue = inbound_message_queue
         self.outbound_message_queue: MessageQueue = outbound_message_queue
+
+        self.config_network_manager: ConfigNetworkManager = config_network_manager
 
         self.logger.debug("HiveReceiverService", "HiveReceiverService initialized...")
 
@@ -115,8 +117,11 @@ class HiveReceiverService:
                     self.handle_heartbeat(data_dict, sender_node)
                 elif command == 'gossip':
                     self.handle_gossip(data_dict, sender_node)
+                elif command == 'config':
+                    self.handle_config(data_dict, sender_node)
                 else:
                     self.logger.warning("HiveReceiverService", f"Unknown command: {command}")
+                    # self.logger.warning("HiveReceiverService", f"Data: {data.decode()}")
 
                 # Send acknowledgment message
                 ack_message = AckMessage(self.hive_node_manager.local_node, sender_node)
@@ -191,3 +196,17 @@ class HiveReceiverService:
                 self.hive_node_manager.add_node(new_node)
 
         self.logger.info("HiveReceiverService", f"Handled gossip from {sender_node.friendly_name}")
+
+    def handle_config(self, data_dict: Dict, sender_node: HiveNode) -> None:
+        """
+        Takes the config message from the data_dict and sets the config_network_manager's config to it.
+
+        Parameters:
+        ----------
+        data_dict : Dict
+            The dictionary containing the data from the incoming message.
+        sender_node : HiveNode
+            The node that sent the gossip message.
+        """
+        
+        self.config_network_manager.set_config(data_dict.get('message'))

@@ -12,6 +12,7 @@ from inbound_queue_command_processor import InboundQueueCommandProcessor
 from gossip_protocol_command_manager import GossipProtocolCommandManager
 from heartbeat_protocol_command_manager import HeartbeatProtocolCommandManager
 from app_settings import AppSettings
+from config_network_manager import ConfigNetworkManager
 
 
 class AppMain:
@@ -64,8 +65,11 @@ class AppMain:
         # Hive Node Manager
         self.hive_node_manager = HiveNodeManager(local_node)
 
+        # Config Network Manager instance 
+        config_network_manager: ConfigNetworkManager = ConfigNetworkManager(self.hive_node_manager, self.outbound_message_queue)
+
         # Hive service server thread
-        hive_service = HiveReceiverService(local_node.friendly_name, local_node.ip_address, local_node.port_number, self.hive_node_manager, self.inbound_message_queue, self.outbound_message_queue)
+        hive_service = HiveReceiverService(local_node.friendly_name, local_node.ip_address, local_node.port_number, self.hive_node_manager, self.inbound_message_queue, self.outbound_message_queue, config_network_manager)
         hive_service_thread = threading.Thread(target=hive_service.run, daemon=True)
         hive_service_thread.start()
 
@@ -90,7 +94,7 @@ class AppMain:
         heartbeat_protocol_command_manager_thread.start()
 
         # CLI Command Processor
-        self.cli_command_processor = CliCommandProcessor(self.hive_node_manager, self.outbound_message_queue, self.inbound_message_queue)
+        self.cli_command_processor = CliCommandProcessor(self.hive_node_manager, self.outbound_message_queue, self.inbound_message_queue, config_network_manager)
         self.cli_command_processor.set_prompt(f"{local_node.friendly_name}> ")
         self.cli_command_processor.command_loop()
 

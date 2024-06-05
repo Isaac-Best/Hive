@@ -1,0 +1,55 @@
+{
+    "LosAngeles": [
+        {
+            "type": "HTTP",
+            "frequency": 15, 
+            "url": "http://example.com"
+        },
+        {
+            "type": "HTTPS",
+            "frequency": 15,
+            "url": "https://example.com"
+        }
+    ],
+    "London":[
+        {
+            "type": "ICMP",
+            "frequency": 15,
+            "hostname": "8.8.8.8"
+        },
+        {
+            "type": "DNS",
+            "frequency": 15,
+            "dns_server": "8.8.8.8",
+            "dns_query": "google.com",
+            "dns_record_type": "A"
+        }
+    ],
+    "Brisbane":[
+        {
+            "type": "NTP",
+            "frequency": 15,
+            "hostname": "pool.ntp.org"
+        },
+        {
+            "type": "TCP",
+            "frequency": 15,
+            "server_address": "google.com",
+            "port_number": 80
+        }
+    ],
+    "NewYork":[
+        {
+            "type": "UDP",
+            "frequency": 15,
+            "server_address": "google.com",
+            "port_number": 53
+        },
+        {
+            "type": "HTTP",
+            "frequency": 15, 
+            "url": "http://example.com"
+        }
+    ]
+}
+

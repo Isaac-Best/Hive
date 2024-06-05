@@ -10,6 +10,8 @@ from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.patch_stdout import patch_stdout
 from hive_node_manager import HiveNodeManager
 from typing import Dict, Callable
+from config_network_manager import ConfigNetworkManager
+import json
 
 
 class CliCommandProcessor:
@@ -32,9 +34,11 @@ class CliCommandProcessor:
         A queue for outbound messages.
     inbound_message_queue : MessageQueue
         A queue for inbound messages.
+    config_network_manager : ConfigNetworkManager
+        An instance of the class ConfigNetworkManager for managing the network services and configurations. 
     """
 
-    def __init__(self, hive_node_manager: HiveNodeManager, outbound_message_queue: MessageQueue, inbound_message_queue: MessageQueue):
+    def __init__(self, hive_node_manager: HiveNodeManager, outbound_message_queue: MessageQueue, inbound_message_queue: MessageQueue, config_network_manager: ConfigNetworkManager):
         """
         Initializes a new instance of CliCommandProcessor.
 
@@ -62,6 +66,10 @@ class CliCommandProcessor:
             'exit': 'Usage: exit - Shut down the node and exit application',
             'quit': 'Usage: quit - Shut down the node and exit application',
             'help': 'Usage: help - List all available commands',
+            'load_config': 'Usage: load_config - Load the initial configuration from the hardcoded json configuration file',
+            'run_service_checks': 'Usage: run_service_checks - Run the service checks on the current configuration',
+            'list_network_configuration': 'Usage: list_network_configuration - List the network configuration',
+            'list_current_network_status': 'Usage: list_current_network_status - List the current network status'
         }
         self.commands: Dict[str, Callable] = {
             'list_nodes': self.list_nodes,
@@ -75,10 +83,15 @@ class CliCommandProcessor:
             'exit': self.process_command,
             'quit': self.process_command,
             'help': self.list_commands,
+            'load_config': self.load_initial_configuration,
+            'run_service_checks': self.run_service_checks,
+            'list_network_configuration': self.list_network_configuration,
+            'list_current_network_status': self.list_current_network_status
         }
         self.hive_node_manager: HiveNodeManager = hive_node_manager
         self.outbound_message_queue: MessageQueue = outbound_message_queue
         self.inbound_message_queue: MessageQueue = inbound_message_queue
+        self.config_network_manager: ConfigNetworkManager = config_network_manager
 
         self.logger.debug("CliCommandProcessor", "CliCommandProcessor initialized...")
 
@@ -122,6 +135,14 @@ class CliCommandProcessor:
                         ip_address: str = parts[1]
                         port: str = parts[2]
                         self.connect_to_node(ip_address, port)
+                elif parts[0] == 'load_config':
+                    self.load_initial_configuration()
+                elif parts[0] == 'run_service_checks':
+                    self.run_service_checks()
+                elif parts[0] == 'list_network_configuration':
+                    self.list_network_configuration()
+                elif parts[0] == 'list_current_network_status':
+                    self.list_current_network_status()
                 else:
                     self.logger.info("CliCommandProcessor", f"Unknown command: {command}")
 
@@ -238,3 +259,44 @@ class CliCommandProcessor:
         Disables the heartbeat protocol by setting the appropriate flag in the HeartbeatProtocolCommandManager.
         """
         HeartbeatProtocolCommandManager.enable = False
+
+    def load_initial_configuration(self) -> None:
+        """
+        Load the initial configuration from the hardcoded json configuration file.
+        propogate the configuration to every currently connected node 
+        """
+        # load the initial configuration into thye appopriate data member 
+        try:
+            with open('initial_configuration.json', 'r') as file:
+                self.config_network_manager.set_config(json.load(file))
+            # self.logger.info("CliCommandProcessor", f"Configuration loaded successfully. {self.config_network_manager.get_config()}")
+        except FileNotFoundError:
+            self.logger.error("CliCommandProcessor", "Configuration file not found")
+        except json.JSONDecodeError:
+            self.logger.error("CliCommandProcessor", "Error decoding json file")
+        except Exception as e:
+            self.logger.error("CliCommandProcessor", f"Error loading configuration: {e}")
+        
+        # propogate the configuration to every currently connected node
+        self.config_network_manager.propogate_config()
+        
+
+    
+    def run_service_checks(self) -> None:
+        """
+        Run the service checks on the current configuration
+        """
+        self.config_network_manager.run_service_checks()
+
+
+    def list_network_configuration(self) -> None:
+        """
+        Logs the network configuration.
+        """
+        self.config_network_manager.list_network_configuration()
+
+    def list_current_network_status(self) -> None:
+        """
+        Logs the current network status.
+        """
+        self.config_network_manager.list_current_network_status()
